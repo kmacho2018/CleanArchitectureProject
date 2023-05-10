@@ -44,7 +44,7 @@ namespace CleanArchitectureProject.Application.Movies.Commands.CreateMovie
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            return entity.Id;
+            return entity.MovieId;
         }
     }
 }
