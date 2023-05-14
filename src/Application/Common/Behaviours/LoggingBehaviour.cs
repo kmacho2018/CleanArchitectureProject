@@ -23,10 +23,10 @@ public class LoggingBehaviour<TRequest> : IRequestPreProcessor<TRequest> where T
         var userId = _currentUserService.UserId ?? string.Empty;
         string? userName = string.Empty;
 
-        if (!string.IsNullOrEmpty(userId))
+        /*if (!string.IsNullOrEmpty(userId))
         {
             userName = await _identityService.GetUserNameAsync(userId);
-        }
+        }*/
 
         _logger.LogInformation("CleanArchitecture Request: {Name} {@UserId} {@UserName} {@Request}",
             requestName, userId, userName, request);

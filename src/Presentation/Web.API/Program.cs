@@ -1,28 +1,52 @@
-using CleanArchitectureProject.Application.Movies.Commands.CreateMovie;
 using CleanArchitectureProject.Infraestructure.Persistence;
-using MediatR;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using System.Reflection;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Logging;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 using Web.API;
-using CleanArchitectureProject.Infraestructure.Persistence;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNamingPolicy = null;
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "DemoJwt", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "Jwt Authorization",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    OpenApiSecurityRequirement opc = new OpenApiSecurityRequirement();
+    opc.Add(new OpenApiSecurityScheme
+    {
+        Reference = new OpenApiReference()
+        {
+            Type = ReferenceType.SecurityScheme,
+            Id = "Bearer"
+        }
+    }, new string[] { });
+    c.AddSecurityRequirement(opc);
+
+});
 
 // Add services to the container.
 builder.Services.AddApplicationServices();
+//IdentityModelEventSource.ShowPII = true;
+
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddWebUIServices();
-
-
 
 var app = builder.Build();
 
@@ -30,7 +54,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "DemoJwtToken v1"));
 
     app.UseDeveloperExceptionPage();
     app.UseMigrationsEndPoint();
@@ -43,33 +67,11 @@ if (app.Environment.IsDevelopment())
         await initialiser.SeedAsync();
     }
 }
-else
-{
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-//app.UseHealthChecks("/health");
+
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-/*app.UseSwaggerUi3(settings =>
-{
-    settings.Path = "/api";
-    settings.DocumentPath = "/api/specification.json";
-});*/
-app.UseRouting();
-
-
-
 app.UseAuthentication();
-app.UseIdentityServer();
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller}/{action=Index}/{id?}");
-
-app.MapRazorPages();
-
-app.MapFallbackToFile("index.html");
+app.MapControllers();
 
 app.Run();

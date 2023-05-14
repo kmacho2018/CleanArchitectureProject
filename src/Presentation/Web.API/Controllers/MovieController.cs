@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Web.API.Controllers
 {
-    //[Authorize]
+    [Authorize]
 
     public class MovieController : ApiControllerBase
     {
